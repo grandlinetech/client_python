@@ -9,9 +9,8 @@ if sys.version_info >= (2, 7):
 else:  # Assuming we don't run setup in order to publish under python 2.6
     long_description = "NA"
 
-
 setup(
-    name="prometheus_client",
+    name="prometheus_client_grandline",
     version="0.11.0",
     author="Brian Brazil",
     author_email="brian.brazil@robustperception.io",

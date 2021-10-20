@@ -1,0 +1,40 @@
+name: 'Docker build python package'
+description: 'BUild python package'
+inputs:
+  index-url:  # id of input
+    description: 'upload index url'
+    required: false
+    default: 'https://artifacts.dev.grandline.link/repository/pypi-grandline/'
+  build-seq-id:
+    description: 'id of build'
+    required: false
+    default: 'latest'
+  repo-username:
+    description: 'repo-username'
+    required: false
+    default: ''
+  repo-password:
+    description: 'repo-password'
+    required: false
+    default: ''
+  build-directory:
+    description: 'build root directory'
+    required: false
+    default: '.'
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
+  full_build_id:
+    description: 'the constructed build id'
+runs:
+  using: 'docker'
+  image: 'build.Dockerfile'
+  args:
+    - ${{ inputs.index-url }}
+    - ${{ inputs.build-seq-id }}
+    - ${{ inputs.build-directory }}
+    - ${{ inputs.repo-username }}
+    - ${{ inputs.repo-password }}
+branding:
+  icon: archive
+  color: blue
