@@ -3,7 +3,7 @@ name: Dev Artifacts
 on:
   push:
     branches:
-      - development
+      - master
 
 jobs:
   build_package_job:
