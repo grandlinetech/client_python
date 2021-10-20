@@ -134,6 +134,9 @@ class _SilentHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
         """Log nothing."""
 
+    def get_stderr(self):
+        f = open(os.devnull, 'w')
+        return f
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Thread per request HTTP server."""
