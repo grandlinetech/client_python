@@ -7,10 +7,12 @@ import socket
 import sys
 import threading
 from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
+from wsgiref.handlers import SimpleHandler
 
 from .openmetrics import exposition as openmetrics
 from .registry import REGISTRY
 from .utils import floatToGoString
+from platform import python_implementation
 
 try:
     from urllib import quote_plus
@@ -33,9 +35,15 @@ except ImportError:
 
 CONTENT_TYPE_LATEST = str('text/plain; version=0.0.4; charset=utf-8')
 """Content type of the latest text format"""
-PYTHON27_OR_OLDER = sys.version_info < (3, )
+PYTHON27_OR_OLDER = sys.version_info < (3,)
 PYTHON26_OR_OLDER = sys.version_info < (2, 7)
 PYTHON376_OR_NEWER = sys.version_info > (3, 7, 5)
+
+__version__ = "0.2"
+
+server_version = "WSGIServer/" + __version__
+sys_version = python_implementation() + "/" + sys.version.split()[0]
+software_version = server_version + ' ' + sys_version
 
 
 class _PrometheusRedirectHandler(HTTPRedirectHandler):
@@ -128,6 +136,31 @@ def make_wsgi_app(registry=REGISTRY):
     return prometheus_app
 
 
+class ServerHandler2(SimpleHandler):
+    server_software = software_version
+
+    def log_exception(self, exc_info):
+        exc_info = None
+
+    def get_stderr(self):
+        f = open(os.devnull, 'w')
+        return f
+
+    def client_is_modern(self) -> bool:
+        return False
+
+    def close(self):
+        try:
+            self.request_handler.log_request(
+                '', self.bytes_sent
+            )
+        finally:
+            SimpleHandler.close(self)
+
+    def handle_error(self) -> None:
+        pass
+
+
 class _SilentHandler(WSGIRequestHandler):
     """WSGI handler that does not log requests."""
 
@@ -135,8 +168,30 @@ class _SilentHandler(WSGIRequestHandler):
         """Log nothing."""
 
     def get_stderr(self):
-        f = open(os.devnull, 'w')
+        f = open(os.devnull, 'wb')
         return f
+
+    def handle(self):
+        """Handle a single HTTP request"""
+
+        self.raw_requestline = self.rfile.readline(65537)
+        if len(self.raw_requestline) > 65536:
+            self.requestline = ''
+            self.request_version = ''
+            self.command = ''
+            self.send_error(414)
+            return
+
+        if not self.parse_request():  # An error code has been sent, just exit
+            return
+
+        handler = ServerHandler2(
+            self.rfile, self.wfile, self.get_stderr(), self.get_environ(),
+            multithread=False,
+        )
+        handler.request_handler = self  # backpointer for logging
+        handler.run(self.server.get_app())
+
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Thread per request HTTP server."""
@@ -274,7 +329,7 @@ def write_to_textfile(path, registry):
     tmppath = '%s.%s.%s' % (path, os.getpid(), threading.current_thread().ident)
     with open(tmppath, 'wb') as f:
         f.write(generate_latest(registry))
-    
+
     # rename(2) is atomic but fails on Windows if the destination file exists
     if os.name == 'nt':
         if sys.version_info <= (3, 3):
@@ -295,7 +350,6 @@ def write_to_textfile(path, registry):
 
 
 def _make_handler(url, method, timeout, headers, data, base_handler):
-
     def handle():
         request = Request(url, data=data)
         request.get_method = lambda: method
