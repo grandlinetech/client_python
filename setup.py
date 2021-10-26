@@ -11,7 +11,7 @@ else:  # Assuming we don't run setup in order to publish under python 2.6
 
 setup(
     name="prometheus_client_grandline",
-    version="0.11.1",
+    version="0.11.2",
     author="Brian Brazil",
     author_email="brian.brazil@robustperception.io",
     description="Python client for the Prometheus monitoring system.",

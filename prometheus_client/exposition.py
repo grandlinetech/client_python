@@ -146,9 +146,6 @@ class ServerHandler2(SimpleHandler):
         f = open(os.devnull, 'w')
         return f
 
-    def client_is_modern(self) -> bool:
-        return False
-
     def close(self):
         try:
             self.request_handler.log_request(
