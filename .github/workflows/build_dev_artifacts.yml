@@ -21,7 +21,7 @@ jobs:
         uses: ./image
         id: prometheus_client
         with:
-          index-url: 'https://artifacts.dev.grandline.link/repository/pypi-grandline/'
+          index-url: 'https://artifactsx.dev.grandline.link/repository/pypi-grandline/'
           repo-username: ${{ secrets.REPO_USERNAME }}
           repo-password: ${{ secrets.REPO_PASSWORD }}
           build-directory: '.'
