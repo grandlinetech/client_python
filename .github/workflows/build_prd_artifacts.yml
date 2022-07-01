@@ -1,0 +1,28 @@
+name: Dev Artifacts
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  build_package_job:
+    runs-on: ubuntu-latest
+    name: build package
+    env:
+      REPO_USERNAME: ${{ secrets.REPO_PROD_USERNAME }}
+      REPO_PASSWORD: ${{ secrets.REPO_PROD_PASSWORD }}
+      NUMBER: ${{ github.run_id }}
+      ENV: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: build action step for trader
+        uses: ./image
+        id: prometheus_client
+        with:
+          index-url: 'https://artifactsx.prd.grandline.link/repository/pypi-grandline/'
+          repo-username: ${{ secrets.REPO_PROD_USERNAME }}
+          repo-password: ${{ secrets.REPO_PROD_PASSWORD }}
+          build-directory: '.'
+          build-seq-id: ${{ env.NUMBER }}
